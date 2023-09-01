@@ -229,7 +229,7 @@ if __name__ == "__main__":
         op_system()
         cpu_temp()
         create_table()
-        cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?)", (time.time(), cpu_temp(),gpu_usage(),ram_usage(),display_usage(),disk_usage()))
+        cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?)", (datetime.datetime.now(), cpu_temp(),gpu_usage(),ram_usage(),display_usage(),disk_usage()))
 
         conn.commit()
         time.sleep(5)
