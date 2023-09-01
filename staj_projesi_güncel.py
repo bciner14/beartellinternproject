@@ -205,7 +205,7 @@ if __name__ == "__main__":
         cur.execute("INSERT INTO pcutilities VALUES (?, ?,?,?,?)", (time.time(), cpu_temp(),gpu_usage(),ram_usage(),display_usage()))
 
         conn.commit()
-        time.sleep(30)
+        time.sleep(5)
     #else:
     #    main()  # Already an admin here.
 
