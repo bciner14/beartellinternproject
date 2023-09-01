@@ -16,6 +16,12 @@ import sys
 import pyuac
 import time
 import sqlite3
+import pywin32_system32
+import pywin32_testutil
+import pywintypes
+import pywin32_bootstrap
+import pywin
+
 
 
 
@@ -149,7 +155,19 @@ def display_usage():
     print(f"CPU usage:{cpu_usage}")
     print(f"Memory usage:%{memory_usage[2]}")
 
-    return memory_usage[2]
+    return cpu_usage
+
+def disk_usage():
+    disk_info = psutil.disk_usage("/")
+    print(f"Total: {disk_info.total / 1024 / 1024 / 1024:.2f} GB")
+    print(f"Used: {disk_info.used / 1024 / 1024 / 1024:.2f} GB")
+    print(f"Free: {disk_info.free / 1024 / 1024 / 1024:.2f} GB")
+    diskusagepercent=disk_info.used/disk_info.total
+    diskusagepercent=100*diskusagepercent
+    diskusagepercentfirst3number=round(diskusagepercent,2)
+
+
+    return diskusagepercentfirst3number
 
 def cpu_info():
 
@@ -162,6 +180,15 @@ def cpu_temp():
     temperature_info = w.MSAcpi_ThermalZoneTemperature()[0]
     print(f"Current temperature: {temperature_info.CurrentTemperature / 10.0-273.15}°C")
     return temperature_info.CurrentTemperature/10.0-273.15
+
+
+def cpu_temp2():
+    cpu_sensors = wmi.WMI()
+    cpu_temperature = cpu_sensors.query("SELECT * FROM Win32_Sensor WHERE SensorType='Temperature' AND SensorCategory='Processor'")
+    print(cpu_temperature[0]['CurrentReading'] / 10.0)
+
+
+
 
 def gpu_usage():
     gpu=GPUtil.getGPUs()[0]
@@ -185,7 +212,7 @@ def ram_usage():
 def create_table():
     # Create a table
     cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS pcutilities(time float, temp float,gputemp float,ramusage float,memory)")
+    cur.execute("CREATE TABLE IF NOT EXISTS pcutility(time float, cputemp float,gputemp float,ramusage float,cpusage,float  diskusage)")
 
 if __name__ == "__main__":
     while True:
@@ -202,7 +229,7 @@ if __name__ == "__main__":
         op_system()
         cpu_temp()
         create_table()
-        cur.execute("INSERT INTO pcutilities VALUES (?, ?,?,?,?)", (time.time(), cpu_temp(),gpu_usage(),ram_usage(),display_usage()))
+        cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?)", (time.time(), cpu_temp(),gpu_usage(),ram_usage(),display_usage(),disk_usage()))
 
         conn.commit()
         time.sleep(5)
@@ -215,3 +242,8 @@ if __name__ == "__main__":
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+
+
+
+
