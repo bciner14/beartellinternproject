@@ -272,7 +272,7 @@ if __name__ == "__main__":
         #add_column_table()
         #drop_column_table()
         conn.commit()
-        time.sleep(30)
+        time.sleep(5)
     #else:
     #    main()  # Already an admin here.
 
