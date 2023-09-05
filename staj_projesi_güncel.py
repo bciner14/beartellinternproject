@@ -21,6 +21,10 @@ import pywin32_testutil
 import pywintypes
 import pywin32_bootstrap
 import pywin
+from gtts import gTTS
+import playsound
+from datetime import date
+
 
 
 
@@ -36,7 +40,8 @@ cur=conn.cursor()
 
 def assistantResponse(text):
     print(text)
-
+    engine.getProperty("voices")
+    engine.setProperty("voice", 'tr-tr-m1')
     engine.say(text)
     engine.runAndWait()
 
@@ -83,9 +88,12 @@ def getDate():
         weekday == 'Pazar'
     monthNum = now.month
     dayNum = now.day
-    dayofweek=dayNum%7
+    today=date.today()
 
-    day_names=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar']
+    dayofweek=date(today.year,today.month,today.day).weekday()
+    #print(dayofweek)
+
+    day_names=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar']
 
     month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                    'November', 'December']
@@ -94,7 +102,7 @@ def getDate():
 
     ordinalNumbers = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th','14th', '15th', '16th', '17th', '18th', '19th', '20th', '21st', '22nd', '23rd', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31st']
     ayıngünleri = ['bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz', 'on', 'onbir', 'oniki', 'onüç','ondört', 'onbeş', 'onaltı', 'onyedi', 'onsekiz', 'ondokuz', 'yirmi', 'yirmibir', 'yirmiiki', 'yirmiüç', 'yirmidört', 'yirmibeş', 'yirmialtı', 'yirmiyedi', 'yirmisekiz', 'yirmidokuz', 'otuz', 'otuzbir']
-    assistantResponse('Bugün ' +day_names[dayofweek+1]   + ', ' + ay_adı[monthNum - 1] + ' the ' + ayıngünleri[dayNum - 1])
+    assistantResponse('Bugün ' +day_names[dayofweek]   + ', ' + ay_adı[monthNum - 1] + ' the ' + ayıngünleri[dayNum - 1])
 
 
 def start():
@@ -107,15 +115,7 @@ def start():
     else:
         wish = "Good Evening!"
     assistantResponse('Hello Sir,' + wish + ' I am your voice assistant. Please tell me how may I help you')
-def basla():
-    saat = int(datetime.datetime.now().hour)
-    if saat >= 0 and saat< 12:
-        wish = "Günaydın!"
-    elif saat>= 12 and saat < 18:
-        wish = "Tünaydın!"
-    else:
-        wish = "İyi akşamlar!"
-    assistantResponse('Merhaba,' + wish + ' Ben sizin sesli asistanınızım. Size nasıl yardımcı olabilirim')
+
 
 def tellTime():
 
@@ -131,18 +131,15 @@ def tellTime():
         assistantResponse("The time is sir " + hour + " Hours and " + min + " Minutes")
 
 
-def saatisöyle():
-    # This method will give the time
-    time = str(datetime.datetime.now())
 
-    # the time will be displayed like
-    # this "2020-06-05 17:50:14.582630"
-    # nd then after slicing we can get time
-    print(time)
-    saat=str(datetime.datetime.now().hour)
-    dakika= str(datetime.datetime.now().minute)
 
-    assistantResponse("Saat" + saat +" i "+ dakika + "geçiyo")
+def get_audio():
+    audio=sr.Microphone()
+    recognizer=sr.Recognizer()
+
+
+
+
 def print_hi(name):
 
     print(f'Hi, {name} this is intern project',)
@@ -153,15 +150,15 @@ def display_usage():
     memory_usage=psutil.virtual_memory()
     cpu_usage=psutil.cpu_percent()
     print(f"CPU usage:{cpu_usage}")
-    print(f"Memory usage:%{memory_usage[2]}")
+    print(f"RAM Memory usage:%{memory_usage[2]}")
 
     return cpu_usage
 
 def disk_usage():
     disk_info = psutil.disk_usage("/")
-    print(f"Total: {disk_info.total / 1024 / 1024 / 1024:.2f} GB")
-    print(f"Used: {disk_info.used / 1024 / 1024 / 1024:.2f} GB")
-    print(f"Free: {disk_info.free / 1024 / 1024 / 1024:.2f} GB")
+    print(f"Total Disk Memory: {disk_info.total / 1024 / 1024 / 1024:.2f} GB")
+    print(f"Used Disk Memory: {disk_info.used / 1024 / 1024 / 1024:.2f} GB")
+    print(f"Free Disk Memory: {disk_info.free / 1024 / 1024 / 1024:.2f} GB")
     diskusagepercent=disk_info.used/disk_info.total
     diskusagepercent=100*diskusagepercent
     diskusagepercentfirst3number=round(diskusagepercent,2)
@@ -173,19 +170,32 @@ def cpu_info():
 
     cpubigi=cpuinfo.get_cpu_info()
     print(cpubigi)
+    # number of cores
+    print("Physical cores:", psutil.cpu_count(logical=False))
+    print("Total cores:", psutil.cpu_count(logical=True))
+    cpufreq = psutil.cpu_freq()
+    print(f"Max Frequency: {cpufreq.max:.2f}Mhz")
+    print(f"Min Frequency: {cpufreq.min:.2f}Mhz")
+    print(f"Current Frequency: {cpufreq.current:.2f}Mhz")
+    # CPU usage
+    print("CPU Usage Per Core:")
+    for i, percentage in enumerate(psutil.cpu_percent(percpu=True, interval=1)):
+        print(f"Core {i}: {percentage}%")
+    print(f"Total CPU Usage: {psutil.cpu_percent()}%")
 
 def cpu_temp():
 
     w = wmi.WMI(namespace="root\\wmi",privileges=["Security"])
     temperature_info = w.MSAcpi_ThermalZoneTemperature()[0]
     print(f"Current temperature: {temperature_info.CurrentTemperature / 10.0-273.15}°C")
-    return temperature_info.CurrentTemperature/10.0-273.15
+    twodecfloatcputemp=round(temperature_info.CurrentTemperature/10.0-273.15,2)
+    return twodecfloatcputemp
 
 
-def cpu_temp2():
-    cpu_sensors = wmi.WMI()
-    cpu_temperature = cpu_sensors.query("SELECT * FROM Win32_Sensor WHERE SensorType='Temperature' AND SensorCategory='Processor'")
-    print(cpu_temperature[0]['CurrentReading'] / 10.0)
+#def cpu_temp2():
+ #   cpu_sensors = wmi.WMI()
+ #   cpu_temperature = cpu_sensors.query("SELECT * FROM Win32_Sensor WHERE SensorType='Temperature' AND SensorCategory='Processor'")
+ #   print(cpu_temperature[0]['CurrentReading'] / 10.0)
 
 
 
@@ -198,7 +208,8 @@ def gpu_usage():
 
 
 def op_system():
-    print(f"{platform.system()}-{platform.release()}-{platform.version()}")
+    print(f"Operating System:{platform.system()}-Release:{platform.release()}-Version:{platform.version()}\nprocessor:{platform.uname().processor}")
+    return platform.system()
 
 def ram_usage():
     # Getting % usage of virtual_memory ( 3rd field)
@@ -214,36 +225,56 @@ def create_table():
     cur = conn.cursor()
     cur.execute("CREATE TABLE IF NOT EXISTS pcutility(time float, cputemp float,gputemp float,ramusage float,cpusage,float  diskusage)")
 
+def add_column_table():
+    # Add a new column to pcutility table
+    new_column = "ALTER TABLE pcutility ADD COLUMN os_version CHAR(25)"
+    cur=conn.cursor()
+    cur.execute(new_column)
+
+def drop_column_table():
+    drop_column = "ALTER TABLE pcutility DROP COLUMN os "
+    cur = conn.cursor()
+    cur.execute(drop_column)
+
+
+def speak(text):
+    tts=gTTS(text=text,lang="en")
+    filename="voice.mp3"
+    tts.save(filename)
+    playsound.playsound(filename)
+    speak("hello friend")
+
+
 if __name__ == "__main__":
     while True:
         engine = pyttsx3.init()
+        voices = engine.getProperty('voices')
+        engine.setProperty("voice", voices[1].id)#ingilizce erkek sesi
+        #engine.setProperty("voice", voices[2].id)  # ingilizce kadın sesi
+       #engine.setProperty("voice", "tr-TR Male")
+        engine.setProperty('rate', 150)  # ses hızlandırma-yavaşlatma
+
         print("Re-launching as admin!")
+        #speak("hello friend")
         print_hi('PyCharm')
         assistantResponse("selam")
         getDate()
         tellTime()
         start()
         display_usage()
-        gpu_usage()
+        assistantResponse(f"ram usage {ram_usage()}percent")
+        assistantResponse(f"gpu sıcaklığı{gpu_usage()} celcius")
         cpu_info()
         op_system()
-        cpu_temp()
+        assistantResponse(f"cpu sıcaklığı {cpu_temp()} celcius")
         create_table()
         cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?)", (datetime.datetime.now(), cpu_temp(),gpu_usage(),ram_usage(),display_usage(),disk_usage()))
-
+        #add_column_table()
+        #drop_column_table()
         conn.commit()
-        time.sleep(5)
+        time.sleep(30)
     #else:
     #    main()  # Already an admin here.
 
 
-
-
-
-
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
-
-
-
-
-
