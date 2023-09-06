@@ -200,6 +200,8 @@ def cpu_temp():
 
 
 
+
+
 def gpu_usage():
     gpu=GPUtil.getGPUs()[0]
     print(f"GPU temp:{gpu.temperature}'C")
@@ -245,6 +247,25 @@ def speak(text):
     speak("hello friend")
 
 
+def get_fps():
+
+    start_time = time.time()
+    x = 3  # displays the frame rate every 3 second
+    counter = 0
+    while True:
+
+        ########################
+        # your fancy code here #
+        ########################
+
+        counter += 1
+        if (time.time() - start_time) > x:
+            print("FPS: ", counter / (time.time() - start_time))
+            counter = 0
+            start_time = time.time()
+            break
+
+
 if __name__ == "__main__":
     while True:
         engine = pyttsx3.init()
@@ -267,14 +288,19 @@ if __name__ == "__main__":
         cpu_info()
         op_system()
         assistantResponse(f"cpu sıcaklığı {cpu_temp()} celcius")
+        get_fps()
         create_table()
         cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?)", (datetime.datetime.now(), cpu_temp(),gpu_usage(),ram_usage(),display_usage(),disk_usage()))
         #add_column_table()
         #drop_column_table()
         conn.commit()
-        time.sleep(5)
+        time.sleep(30)
     #else:
     #    main()  # Already an admin here.
+
+
+
+
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
