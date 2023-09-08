@@ -21,6 +21,7 @@ import pywin32_testutil
 import pywintypes
 import pywin32_bootstrap
 import pywin
+import winreg
 from gtts import gTTS
 import playsound
 from datetime import date
@@ -198,6 +199,47 @@ def cpu_temp():
  #   print(cpu_temperature[0]['CurrentReading'] / 10.0)
 
 
+def cpu_temp3():
+
+     #w = wmi.WMI(namespace="root\OpenHardwareMonitor")
+    #temperature_infos = w.Sensor()
+    #for sensor in temperature_infos:
+      #  if sensor.SensorType == u'Temperature':
+      #      print(sensor.Name)
+       #     print(sensor.Value)
+        #    if sensor.Name =='CPU Core':
+         #       return sensor.Name
+
+     cpu_temp_total=0
+     counter=0
+
+     w = wmi.WMI(namespace="root\OpenHardwareMonitor")
+     temperature_infos = w.Sensor()
+     # print(temperature_infos)
+     for sensor in temperature_infos:
+         # print(sensor)
+         if sensor.SensorType == 'Temperature':
+             counter=counter+1
+             print(sensor.Name)
+             print(sensor.Value)
+             if sensor.Name!='CPU Package' and sensor.Name!= 'GPU Core':
+
+                 cpu_temp_total=cpu_temp_total+sensor.Value
+                 print(cpu_temp_total)
+
+     print(f"avg_cpu_temp:{(cpu_temp_total)/6}")
+     print(f"counter:{counter}")
+     avg_cpu_temp=(cpu_temp_total)/6
+     return avg_cpu_temp
+
+
+
+
+
+
+
+
+
 
 
 
@@ -229,7 +271,7 @@ def create_table():
 
 def add_column_table():
     # Add a new column to pcutility table
-    new_column = "ALTER TABLE pcutility ADD COLUMN os_version CHAR(25)"
+    new_column = "ALTER TABLE pcutility ADD COLUMN fps CHAR(25)"
     cur=conn.cursor()
     cur.execute(new_column)
 
@@ -260,9 +302,12 @@ def get_fps():
 
         counter += 1
         if (time.time() - start_time) > x:
+            fps_value=counter / (time.time() - start_time)
             print("FPS: ", counter / (time.time() - start_time))
             counter = 0
             start_time = time.time()
+            fps_value_one_decimal=round(fps_value,1)
+            return fps_value_one_decimal/100000
             break
 
 
@@ -272,7 +317,7 @@ if __name__ == "__main__":
         voices = engine.getProperty('voices')
         engine.setProperty("voice", voices[1].id)#ingilizce erkek sesi
         #engine.setProperty("voice", voices[2].id)  # ingilizce kadın sesi
-       #engine.setProperty("voice", "tr-TR Male")
+        #engine.setProperty("voice", "tr-TR Male")
         engine.setProperty('rate', 150)  # ses hızlandırma-yavaşlatma
 
         print("Re-launching as admin!")
@@ -290,8 +335,9 @@ if __name__ == "__main__":
         assistantResponse(f"cpu sıcaklığı {cpu_temp()} celcius")
         get_fps()
         create_table()
-        cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?)", (datetime.datetime.now(), cpu_temp(),gpu_usage(),ram_usage(),display_usage(),disk_usage()))
         #add_column_table()
+        cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?,?)", (datetime.datetime.now(), cpu_temp3(),gpu_usage(),ram_usage(),display_usage(),disk_usage(),get_fps()))
+        cpu_temp3()
         #drop_column_table()
         conn.commit()
         time.sleep(30)
