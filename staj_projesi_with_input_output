@@ -25,6 +25,8 @@ import winreg
 from gtts import gTTS
 import playsound
 from datetime import date
+import socket
+
 
 
 
@@ -35,6 +37,8 @@ from datetime import date
 # Connect to the SQLite database
 conn = sqlite3.connect("cpu_temp.db")
 cur=conn.cursor()
+
+
 
 
 
@@ -255,9 +259,17 @@ def gpu_usage():
 
 
 
-def op_system():
+def op_system_name():
     print(f"Operating System:{platform.system()}-Release:{platform.release()}-Version:{platform.version()}\nprocessor:{platform.uname().processor}")
     return platform.system()
+
+def op_system_release():
+    print(f"Operating System:{platform.system()}-Release:{platform.release()}-Version:{platform.version()}\nprocessor:{platform.uname().processor}")
+    return platform.release()
+
+def op_system_version():
+    print(f"Operating System:{platform.system()}-Release:{platform.release()}-Version:{platform.version()}\nprocessor:{platform.uname().processor}")
+    return platform.version()
 
 def ram_usage():
     # Getting usage of virtual_memory in GB ( 4th field)
@@ -277,6 +289,14 @@ def free_ram():
     return psutil.virtual_memory()[1] / 1000000000
 
 
+def free_disk_memory():
+    # Getting free disk memory in GB
+    disk_info = psutil.disk_usage("/")
+    free_disc_mem=disk_info.free/1024/1024/1024
+    print(f"Free Disk Memory: {disk_info.free / 1024 / 1024 / 1024:.2f} GB")
+    return free_disc_mem
+
+
 
 
 def create_table():
@@ -286,7 +306,7 @@ def create_table():
 
 def add_column_table():
     # Add a new column to pcutility table
-    new_column = "ALTER TABLE pcutility ADD COLUMN free_ram "
+    new_column = "ALTER TABLE pcutility ADD COLUMN os_version "
     cur=conn.cursor()
     cur.execute(new_column)
 
@@ -334,6 +354,17 @@ if __name__ == "__main__":
         #engine.setProperty("voice", voices[2].id)  # ingilizce kadın sesi
         #engine.setProperty("voice", "tr-TR Male")
         engine.setProperty('rate', 150)  # ses hızlandırma-yavaşlatma
+        #datetime attributes
+        now = datetime.datetime.now()
+        year = now.strftime("%Y")
+        month = now.strftime("%m")
+        day = now.strftime("%d")
+        hour = now.strftime("%H")
+        minute = now.strftime("%M")
+        second = now.strftime("%S")
+
+        string = f"{day}/{month}/{year} {hour}:{minute}:{second}"#time as string
+
 
         print("Re-launching as admin!")
         #speak("hello friend")
@@ -361,20 +392,20 @@ if __name__ == "__main__":
             print(f"Disk kullanımı:{disk_usage()}")
 
         if 'operating' in prompt:
-            print(f"oprerating System:{op_system()}")
+            print(f"oprerating System:{op_system_name()}")
         if 'Operating' in prompt:
-            print(f"Operating system::{op_system()}")
+            print(f"Operating system::{op_system_name()}")
         if 'işletim' in prompt:
-            print(f"işletim sistemi:{op_system()}")
+            print(f"işletim sistemi:{op_system_name()}")
         if 'İşletim' in prompt:
-            print(f"İşletim Sistemi::{op_system()}")
+            print(f"İşletim Sistemi::{op_system_name()}")
         if 'all' in prompt:
             print(f"ortalama cpu sıcaklık:{cpu_info()}")
             print(f"ram usage:{ram_usage()}")
             print(f"fps:{get_fps()}")
             print(f"gpu sıcaklığı:{gpu_usage()}")
             print(f"disk kullanımı yüzde:{disk_usage()}")
-            print(f"operating System:{op_system()}")
+            print(f"operating System:{op_system_name()}")
 
 
 
@@ -395,11 +426,11 @@ if __name__ == "__main__":
         #get_fps()
         #create_table()
         #add_column_table()
-        #cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?,?,?)", (datetime.datetime.now(), cpu_temp3(),gpu_usage(),ram_usage(),display_usage(),disk_usage(),get_fps(),free_ram()))
+        cur.execute("INSERT INTO pcutility VALUES (?, ?,?,?,?,?,?,?,?,?,?,?)", (now.strftime(string), cpu_temp3(),gpu_usage(),ram_usage(),display_usage(),disk_usage(),get_fps(),free_ram(),free_disk_memory(),op_system_name(),op_system_release(),op_system_version()))
         #cpu_temp3()
         #drop_column_table()
         conn.commit()
-        time.sleep(30)
+        time.sleep(10)
     #else:
     #    main()  # Already an admin here.
 
